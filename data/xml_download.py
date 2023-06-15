@@ -1,4 +1,4 @@
-# Usage: $ scrapy runspider get_xmls.py
+# Usage: $ scrapy runspider xml_download.py
 
 import scrapy
 from pathlib import Path
