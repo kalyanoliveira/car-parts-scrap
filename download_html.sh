@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: nohup ./dowload.sh proxy_credential max_simultaneous_requests stop_at output_directory
+# Usage: nohup ./download_html_new.sh proxy_credential max_simultaneous_requests stop_at
 
 # Assign proxy_credential to command line argument 1
 proxy_credential=$1 
@@ -12,45 +12,46 @@ max_simultaneous_requests=${2:-15}
 stop_at=${3:-100}
 
 # Assign output_directory to command line argument 4, but if that is empty, assign a default value of "data/htmls"
-output_directory="data/htmls"
+output_directory="temp_data/htmls"
 
-csv_file="data/csvs/final.csv"
+csv_file="car_parts_scrap/data/csvs/final.csv"
 
 # Making sure proxy_credential is provided in the command line argument
 if [ -z "$proxy_credential" ]; then
     echo "Informe o proxy_credential"
-    echo " Usage: nohup ./dowload.sh proxy_credential max_simultaneous_requests stop_at"
+    echo "Usage: nohup ./download_html_new.sh proxy_credential max_simultaneous_requests stop_at"
     exit 1
 fi
 
 # Usage: request_html html_address html_download_output_path
 request_html() {
-    dowload_output_path=$2
+    html_address=$1
+    html_download_output_path=$2
 
     # If the html file already exists and its size is large enough
-    if [ -e "$dowload_output_path" ] && [ $(stat -c %s "$dowload_output_path") -gt 157861 ]; then
-        echo "O arquivo $dowload_output_path existe e tem tamanho maior que 157861 bytes."
+    if [ -e "$html_download_output_path" ] && [ $(stat -c %s "$html_download_output_path") -gt 157861 ]; then
+        echo "O arquivo $html_download_output_path existe e tem tamanho maior que 157861 bytes."
     # If the html file already exists
-    elif [ -e "$dowload_output_path " ]; then
-        if grep -q "An error occurred in the application and your page could not be served" "$dowload_output_path"; then
-            echo "O arquivo $dowload_output_path contém um item INEXISTENTE."
+    elif [ -e "$html_download_output_path" ]; then
+        if grep -q "An error occurred in the application and your page could not be served" "$html_download_output_path"; then
+            echo "O arquivo $html_download_output_path contém um item INEXISTENTE."
         fi
         # If some Amazon stuff I don't quite get went wrong, re-download the file
-        if grep -q "The Amazon CloudFront distribution is configured to block access from your country" "$dowload_output_path"; then
-            echo "O arquivo $dowload_output_path contém um item BLOQUEADO."
-			echo "Requisitando $download_output_path"
-            curl -sS -x "$proxy_credential" -k "$1" > "$dowload_output_path "
+        if grep -q "The Amazon CloudFront distribution is configured to block access from your country" "$html_download_output_path"; then
+            echo "O arquivo $html_download_output_path contém um item BLOQUEADO."
+			echo "Requisitando $html_download_output_path"
+            curl -sS -x "$proxy_credential" -k "$html_address" > "$html_download_output_path"
         fi
     else
         # Downloading file
-		echo "Requisitando $2"
-        curl -sS -x "$proxy_credential" -k "$1" > "$download_output_path"
+		echo "Requisitando $html_address"
+        curl -sS -x "$proxy_credential" -k "$html_address" > "$html_download_output_path"
     fi
 }
 
 # Looping the CSV file and obtaining the html addresseses and the desired output file names
 iterations=0
-while IFS="," read -r address filename && ["$iterations" -lt "$stop_at"]; do
+while IFS="," read -r address filename && [ "$iterations" -lt "$stop_at" ]; do
 
     # Removing any white space
     html_address=$(echo "$address" | awk '{$1=$1};1')
@@ -69,8 +70,9 @@ while IFS="," read -r address filename && ["$iterations" -lt "$stop_at"]; do
     request_html "$html_address" "$html_download_output_path" &
 
     iterations=$((iterations + 1))
-done
+done < "$csv_file"
 
 # Yeah just waiting stuff to finish downloading
 wait
+
 
