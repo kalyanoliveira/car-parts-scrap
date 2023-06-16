@@ -159,11 +159,10 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-xmls/
-csvs/
-xmls/
-htmls/
-jsons/
+xmls/*.xml
+csvs/*.csv
+htmls/*.htmls
+jsons/*.jsons
 
 important_lines.txt
 sample.html

@@ -17,16 +17,13 @@ def main():
     elif out_stat == "No errors":
         logging.debug("Generated final.csv")
 
-
-    # Downloading html files using final.csv
-    os.system("echo downloading htmls using bash")
-
     # Parsing the downloaded htmls files to generate jsons
     from python_src.utils.imports import generate_jsons
     logging.debug("Generating jsons")
     out_stat = generate_jsons()
     if out_stat == "Not found html":
         logging.error("Could not find any html files")
+        logging.error("You can download them via the provided bash script. You will need to provide proxy credentials")
         return
     elif out_stat == "Found html":
         logging.debug("Generated jsons")
