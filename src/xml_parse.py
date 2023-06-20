@@ -52,9 +52,9 @@ def create_product_urls_csv():
             pass 
 
         # Parse each xml file in xml_folder
-        for xml_file in os.listdir(xmls_folder):
-            add_xml_to_csv(xml_filepath = os.path.join(xmls_folder, xml_file), 
-                           output_csv_filepath = os.path.join(csvs_folder, "product_urls.csv"))
+        for xml_file_name in os.listdir(xmls_folder):
+            add_xml_to_csv(xml_filepath=            os.path.join(xmls_folder, xml_file_name), 
+                           output_csv_filepath=     os.path.join(csvs_folder, "product_urls.csv"))
 
     # In case we have not xml files, let's log an error
     else:

@@ -9,6 +9,9 @@ parse_xmls:
 download_htmls:
 	cd ./src && python3 html_download.py $(proxy_credential) $(PROJECT_PATH) $(website_name)
 
+parse_htmls:
+	cd ./src && python3 html_parse.py $(PROJECT_PATH) $(website_name)
+
 process_html:
 	echo For each website
 	echo For each downloaded HTML file of that website
