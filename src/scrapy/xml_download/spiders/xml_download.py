@@ -28,10 +28,7 @@ class XMLSpider(scrapy.Spider):
         project_path = self.settings.get("PROJECT_PATH")
         output_dir = "data/pecahoje/xmls"
         file_folder = project_path + "/" + output_dir
-        try:
-            Path(file_folder).mkdir(parents=True, exist_ok=False)
-        except FileExistsError:
-            pass
+        Path(file_folder).mkdir(parents=True, exist_ok=True)
 
         # Save the contents of the current <loc>.xml file
         file_name = file_folder + "/" + response.url.split("/")[-1]

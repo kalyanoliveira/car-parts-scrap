@@ -29,4 +29,6 @@ Currently implementing a Makefile to do the job <br>
 Implentando uma Makefile para fazer o trabalho
 
 
-`make sitemap url="http://www.pecahoje.com.br/sitemap.xml"`
+`make download_xmls url="http://www.pecahoje.com.br/sitemap.xml"`
+
+`make parse_xmls website_name=pecahoje`

@@ -1,9 +1,12 @@
 PROJECT_PATH = $(shell pwd)
 
-sitemap:
+download_xmls:
 	cd ./src/scrapy && scrapy crawl xml_download -s PROJECT_PATH=$(PROJECT_PATH) -s SITEMAP_URL=$(url)
 
-explore_sitemap:
+parse_xmls:
+	cd ./src && python3 xml_parsing.py $(PROJECT_PATH) $(website_name)
+
+explore_site:
 	echo For each line in sitemap.csv
 	echo Get the URL of the sitemap.xml
 	echo Use the sitemap.xml to find all URLs of webpages containing car parts in that website

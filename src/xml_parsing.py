@@ -1,6 +1,20 @@
-def add_xml_to_csv(xml_filepath, output_csv_filepath):
-    from .utils.imports import bs, logging 
+import sys
+import os
+from pathlib import Path
+import logging
+from bs4 import BeautifulSoup as bs
 
+# Command line arguments
+PROJECT_PATH = sys.argv[1]
+WEBSITE_NAME = sys.argv[2]
+
+# Get the xml folder
+xmls_folder = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "xmls")
+
+# Get the csvs folder
+csvs_folder = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "csvs")
+
+def add_xml_to_csv(xml_filepath, output_csv_filepath):
     logging.debug(f"Parsing xml file {xml_filepath}")
 
     content = []
@@ -20,40 +34,32 @@ def add_xml_to_csv(xml_filepath, output_csv_filepath):
             string = f"{url},{filename}.html\n"
             f_csv.write(string) 
 
-def generate_csv():
-    from .utils.imports import os, PROJECT_PATH, logging
+# Returns true if it can find any .xml file in xml_folder
+def xmls_exist():
+    for file_name in os.listdir(xmls_folder):
+        if file_name.endswith(".xml"): 
+            return True
+    return False
 
-    # def can_generate_csv():
-    #     # If there already exists a csv file, return 1
-    #     if os.path.exists(os.path.join(PROJECT_PATH, "data", "csvs", "final.csv")):
-    #         return 1
-    #     # If there are xmls, return False (signifying no errors) 
-    #     for filename in os.listdir(os.path.join(PROJECT_PATH, "data", "xmls")):
-    #         if filename.endswith(".xml"):
-    #             return 0
-    #     # If there are no xmls, return error 2
-    #     return 2
+# Function call add_xml_to_csv if any xml files exist
+def create_product_urls_csv():
+    
+    if xmls_exist():
 
-    # condition = can_generate_csv()
-    # # If there are xml files and no csv file
-    # if condition == 0:
-    #     xml_file_names = os.listdir(os.path.join(PROJECT_PATH, "data", "xmls"))
-    #     for xml_file_name in xml_file_names:
-    #         add_xml_to_csv(os.path.join(PROJECT_PATH, "data", "xmls", xml_file_name), os.path.join(PROJECT_PATH, "data", "csvs", "final.csv"))
-    #     return condition
-    # # If there are no xml files and no csv file
-    # elif condition == 2:
-    #     return condition
-    # # If there is already a csv file
-    # elif condition == 1:
-    #     return condition
+        # Clear the existing product_urls.csv
+        Path(csvs_folder).mkdir(parents=True, exist_ok=True)
+        with open(os.path.join(csvs_folder, "product_urls.csv"), "w"):
+            pass 
 
-    if os.path.exists(os.path.join(PROJECT_PATH, "data", "csvs", "final.csv")):
-        return "Found csv"
-    for filename in os.listdir(os.path.join(PROJECT_PATH, "data", "xmls")):
-        if filename.endswith(".xml"):
-            xml_file_names = os.listdir(os.path.join(PROJECT_PATH, "data", "xmls"))
-            for xml_file_name in xml_file_names:
-                add_xml_to_csv(os.path.join(PROJECT_PATH, "data", "xmls", xml_file_name), os.path.join(PROJECT_PATH, "data", "csvs", "final.csv"))
-            return "No errors"
-    return "Not found xmls"
+        # Parse each xml file in xml_folder
+        for xml_file in os.listdir(xmls_folder):
+            add_xml_to_csv(xml_filepath = os.path.join(xmls_folder, xml_file), 
+                           output_csv_filepath = os.path.join(csvs_folder, "product_urls.csv"))
+
+    # In case we have not xml files, let's log an error
+    else:
+        logging.error(f"XML files do not exist, cannot generate product_urls.csv for {WEBSITE_NAME}")
+
+
+if __name__ == "__main__":
+    create_product_urls_csv()
