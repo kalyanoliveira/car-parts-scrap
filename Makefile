@@ -1,10 +1,10 @@
 PROJECT_PATH = $(shell pwd)
 
 download_xmls:
-	cd ./src/scrapy && scrapy crawl xml_download -s PROJECT_PATH=$(PROJECT_PATH) -s SITEMAP_URL=$(url)
+	cd ./src/scrapy && scrapy crawl xml_download -s PROJECT_PATH=$(PROJECT_PATH) -s SITEMAP_URL=$(sitemap_url)
 
 parse_xmls:
-	cd ./src && python3 xml_parsing.py $(PROJECT_PATH) $(website_name)
+	cd ./src && python3 xml_parse.py $(PROJECT_PATH) $(website_name)
 
 explore_site:
 	echo For each line in sitemap.csv
