@@ -26,9 +26,10 @@ Para cada website the vende peças de carro
 # Usage/Uso
 
 Currently implementing a Makefile to do the job <br>
-Implentando uma Makefile para fazer o trabalho
-
+Implentando uma Makefile para fazer esta função
 
 `make download_xmls sitemap_url="http://www.pecahoje.com.br/sitemap.xml"`
 
 `make parse_xmls website_name=pecahoje`
+
+`make download_htmls website_name="pecahoje" proxy_credential="proxy_here"`
