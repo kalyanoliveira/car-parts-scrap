@@ -1,8 +1,7 @@
+PROJECT_PATH = $(shell pwd)
+
 sitemap:
-	echo Get URL of each website
-	echo Get the sitemap.xml of each website
-	echo "Create a csv where each line has the URL of the website, and the URL of the website's sitemap.xml"
-	echo Call that csv sitemaps.csv
+	cd ./src/scrapy && scrapy crawl xml_download -s PROJECT_PATH=$(PROJECT_PATH) -s SITEMAP_URL=$(url)
 
 explore_sitemap:
 	echo For each line in sitemap.csv
