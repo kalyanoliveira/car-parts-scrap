@@ -2,7 +2,7 @@
 
 The goal of this project is automate the scrapping of auto parts' information.
 
-# Method
+# Methodology
 
 For each website that sells auto parts
 1. Obtain the home/main URL of that website
