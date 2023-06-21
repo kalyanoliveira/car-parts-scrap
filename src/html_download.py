@@ -1,9 +1,11 @@
 import os
 import sys
 import subprocess
-from multiprocessing import Pool
+import csv
 from pathlib import Path
 import logging
+import requests
+import time
 
 # Usage: python3 html_download.py proxy_credential PROJECT_PATH WEBSITE_NAME max_simultaneous_requests stop_at
 
@@ -25,11 +27,9 @@ WEBSITE_NAME = sys.argv[3]
 max_simultaneous_requests = int(sys.argv[4]) if len(sys.argv) > 4 else 15
 
 # Assign stop_at to command line argument 5, but if that is empty, assign a default value of 100
-stop_at = int(sys.argv[5]) if len(sys.argv) > 5 else 100
+stop_at = int(sys.argv[5]) if len(sys.argv) > 5 else 20
 
-# Usage: request_html(html_address, html_download_output_path)
-def request_html(args):
-    html_address, html_download_output_path = args
+def request_html(html_address, html_download_output_path):
 
     # If the html file already exists and its size is large enough
     if os.path.exists(html_download_output_path) and os.stat(html_download_output_path).st_size > 157861:
@@ -37,7 +37,10 @@ def request_html(args):
     else:
         # Downloading file
         logging.debug(f"Requisitando {html_address}")
-        subprocess.run(["curl", "-sS", "-x", proxy_credential, "-k", html_address, "-o", html_download_output_path])
+        # proxies = {"https": proxy_credential}
+        # response = requests.get(html_address, proxies=proxies, verify=False)
+        # with open(html_download_output_path, "wb") as f:
+        #     f.write(response.content)
         logging.debug(f"{html_download_output_path} [OK]")
 
 def download_all_htmls():
@@ -47,32 +50,25 @@ def download_all_htmls():
     csv_file_path = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "csvs", "product_urls.csv")
 
     iterations = 0
-    jobs = []
-
-    with open(csv_file_path, "r") as f_csv:
-        for line in f_csv:
-            url, desired_output_file_name = line.strip().split(',')
+    with open(csv_file_path, "r") as file:
+        csv_reader = csv.reader(file)
+        for row in csv_reader:
+            if iterations >= stop_at:
+                break
+            url, desired_output_file_name = row
 
             desired_output_file_path = os.path.join(output_directory, desired_output_file_name)
 
-            while len(jobs) >= max_simultaneous_requests:
-                for job in jobs:
-                    job.join(0.1)
-                    if not job.is_alive():
-                        jobs.remove(job)
+            while int(subprocess.run(["pgrep", "-c", "python3"], capture_output=True, text=True).stdout.strip()) >= max_simultaneous_requests:
+                time.sleep(0.1)
 
-            p = Pool(processes=1)
-            p.apply_async(request_html, [(url, desired_output_file_path)])
-            jobs.append(p)
+            request_html(html_address=url,
+                         html_download_output_path=desired_output_file_path)
 
             iterations += 1
-            if iterations >= stop_at:
-                break
-
-    for job in jobs:
-        job.join()
 
     logging.debug("Done downloading htmls")
 
 if __name__ == "__main__":
+    logging.getLogger().setLevel(logging.DEBUG)
     download_all_htmls()
