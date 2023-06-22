@@ -16,92 +16,74 @@ htmls_folder = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "htmls")
 
 raw_jsons_folder = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "jsons", "raw")
 
-# Does cool stuff
+def get_images(bs_content):
+    # Get all of the images
+    ul_element = bs_content.find("ul", {"class":"thumbs"})
+    img_elements = bs_content.find_all("a", {"id":"botaoZoom"})
+    images = []
+    for image in img_elements:
+        images.append(image["zoom"])
+    return images
+
+def get_caracteristics(bs_content):
+    classes = ["TIPO-DE-PRODUTO", "QUANTIDADE-POR-EMBALAGEM", "COR", "PESO-APROXIMADO", "DIMENSOES-DO-PRODUTO", "DIMENSOES-DA-EMBALAGEM", "GARANTIA"]
+    CARACTERISTICAS = {}
+    for class_name in classes:
+        CARACTERISTICAS[class_name] = found.text if (found := bs_content.find("td", {"class": class_name})) else "n/a"
+    CARACTERISTICAS = [CARACTERISTICAS]
+    return CARACTERISTICAS
+
+def regex_to_json_dict(html_content: str, regex_pattern: str) -> dict:
+    if (match := re.search(regex_pattern, html_content)):
+        search_result = match.group(1)
+    else:
+        search_result = {"n/a": "n/a"}
+    
+    # We could technically stop here, and already do a json.loads(search_result)
+    # The only reason we do all this below is to return a sorted dict, and also a dict inside a list
+    js_code = f"""
+        var result = {search_result};
+        JSON.stringify(result);
+    """
+    json_string = eval_js(js_code)
+    if json_string:
+        try:
+            data = json.loads(json_string)
+            if isinstance(data, list):
+                return data
+            else:
+                return [data]
+        except json.JSONDecodeError:
+            return None
+    else:
+        return None
+
 def parse_html_to_json(html_file_path, output_json_file_path):
 
     logging.debug(f"Parsing html file {html_file_path}")
 
-    # # Get the html content of the html file in html_file_path
-    # content = []
-    # with open(html_file_path, "r") as f_html:
-    #     content = f_html.readlines()
-    # content = "".join(content)
-    # bs_content = bs(content, features="lxml")
+    with open(html_file_path, "r") as f_html:
+        html_contents = f_html.read()
 
-    # # Find all possible <script> tags in that content
-    # scripts = bs_content.find_all('script')
+    bs_content = bs(html_contents, features="lxml")
 
-    # # For each script tag, evaluate the following regex
-    # # Append true evaluations to the array "potentials"
-    # pattern = r'var skuJson_0 = ({.*});CATALOG_SDK.setProductWithVariationsCache\(skuJson_0.productId, skuJson_0\); var skuJson = skuJson_0;'
-    # potentials = []
-    # for script in scripts:
-    #     if (match := re.match(pattern, script.text)):
-    #         potentials.append(match.group(1))
+    skuJson_0_pattern = r'var skuJson_0 = ({.+});CATALOG'
+    vtxctx_pattern = r'vtxctx = ({.+});</script'
+    vtex_events_addData_pattern = r'<script>\nvtex.events.addData\(({.+})\);\n</script>'
+    itemprop_pattern = r'<meta itemprop="description" content="(.+)" \/><meta itemprop="url" '
+    itemprop = found.group(1) if (found := re.search(itemprop_pattern, html_contents)) else "n/a"
 
-    # # If we get more than one true regex evaluation, something went wrong
-    # if len(potentials) != 1:
-    #     print("Found more than one regex pattern, saving some random stuff into the json")
-    #     random_data = {"hi":"how are you doing"}
-    #     with open(output_json_file_path, "w") as f_json:
-    #         json.dump(random_data, f_json, indent=4, ensure_ascii=False)
-    #         logging.error(f"Error in parsing of {html_file_path}: found more than one regex pattern")
-    #         return
+    data = {
+        "CARACTERISTICAS":                      get_caracteristics(bs_content),
+        "skuJson_0":                            regex_to_json_dict(html_contents, skuJson_0_pattern),
+        "vtxctx":                               regex_to_json_dict(html_contents, vtxctx_pattern),
+        "vtex.events.addData":                  regex_to_json_dict(html_contents, vtex_events_addData_pattern),
+        "itemprop":                             itemprop,
+        "images":                               get_images(bs_content),
+    }
     
-    # # If we get just one true regex evaluation, that means that we have the json contents we need
-    # # Let's save those here
-    # true_potential = potentials[0]
-
-    # # I have no idea what this exactly does, but
-    # # the input is the regex string
-    # # the output is the dictionary of the regex string
-    # # and I know how to convert a python dictionary to a JSON, so we good
-    # js_code = f'''
-    #     var result={true_potential};
-    #     JSON.stringify(result);
-    # '''
-    # variable_value = eval_js(js_code)
-    # data = json.loads(variable_value)
-    
-    # type_of_product = bs_content.find('td', {"class": "TIPO-DE-PRODUTO"})
-    # if type_of_product: 
-    #     type_of_product = type_of_product.text
-    #     data["item_type"] = type_of_product
-
-    # color = bs_content.find('td', {"class": "COR"})
-    # if color: 
-    #     color = color.text
-    #     data["color"] = color
-
-    # quantity_per_package = bs_content.find('td', {"class": "QUANTIDADE-POR-EMBALAGEM"})
-    # if quantity_per_package: quantity_per_package = quantity_per_package.text
-
-    # mass = bs_content.find('td', {"class": "PESO-APROXIMADO"})
-    # if mass: 
-    #     mass = mass.text
-    #     data["mass"] = mass
-
-    # product_dimensions = bs_content.find('td', {"class": "DIMENSOES-DO-PRODUTO"})
-    # if product_dimensions: 
-    #     product_dimensions = product_dimensions.text
-    #     data["product_dimensions"] = product_dimensions
-
-    # package_dimensions = bs_content.find('td', {"class": "DIMENSOES-DA-EMBALAGEM"})
-    # if package_dimensions: 
-    #     package_dimensions = package_dimensions.text
-    #     data["package_dimensions"] = package_dimensions
-
-    # compatibility = bs_content.find('td', {"class": "Modelo"})
-    # if compatibility: 
-    #     compatibility = compatibility.text
-    #     data["compatibility"] = compatibility
-
-    # mpn = bs_content.find("div", {"class": "skuReference"})
-    # if mpn:
-    #     data["mpn"] = mpn.text
-
-    # with open(output_json_file_path, "w") as f_json:
-    #     json.dump(data, f_json, indent=4, ensure_ascii=False)
+    with open(output_json_file_path, "w") as f_json:
+        json.dump(data, f_json, indent=4, ensure_ascii=False)
 
 def htmls_exist():
     for file_name in os.listdir(htmls_folder):

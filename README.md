@@ -33,3 +33,5 @@ Implentando uma Makefile para fazer esta função
 `make parse_xmls website_name=pecahoje`
 
 `make download_htmls website_name="pecahoje" proxy_credential="proxy_here"`
+
+`make parse_htmls website_name="pecahoje"`
