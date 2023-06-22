@@ -33,6 +33,14 @@ def get_caracteristics(bs_content):
     CARACTERISTICAS = [CARACTERISTICAS]
     return CARACTERISTICAS
 
+def get_specifications(bs_content):
+    classes = ["ESPECIFICACOES-TECNICAS", "INDICACOES", "CONTRA-INDICACOES"]
+    tds = {}
+    for class_name in classes:
+        tds[class_name] = found.text if (found := bs_content.find("td", {"class": class_name})) else "n/a"
+    tds = [tds]
+    return tds
+
 def regex_to_json_dict(html_content: str, regex_pattern: str) -> dict:
     if (match := re.search(regex_pattern, html_content)):
         search_result = match.group(1)
@@ -75,6 +83,7 @@ def parse_html_to_json(html_file_path, output_json_file_path):
 
     data = {
         "CARACTERISTICAS":                      get_caracteristics(bs_content),
+        "ESPECIFICACOES":                       get_specifications(bs_content),
         "skuJson_0":                            regex_to_json_dict(html_contents, skuJson_0_pattern),
         "vtxctx":                               regex_to_json_dict(html_contents, vtxctx_pattern),
         "vtex.events.addData":                  regex_to_json_dict(html_contents, vtex_events_addData_pattern),

@@ -12,10 +12,8 @@ download_htmls:
 parse_htmls:
 	cd ./src && python3 html_parse.py $(PROJECT_PATH) $(website_name)
 
-process_html:
-	echo For each website
-	echo For each downloaded HTML file of that website
-	echo Extract all of the revelant info of that HTML and put it in a raw JSON file
+parse_raw_jsons:
+	cd ./src && python3 raw_json_parse.py $(PROJECT_PATH) $(website_name)
 
 process_json:
 	echo For each website
