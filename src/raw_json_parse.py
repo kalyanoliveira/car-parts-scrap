@@ -12,7 +12,10 @@ WEBSITE_NAME = sys.argv[2]
 raw_jsons_dir = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "jsons", "raw")
 refined_jsons_dir = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "jsons", "refined")
 
+logging.getLogger().setLevel(logging.DEBUG)
+
 def parse_raw_json_refined(raw_json_path, output_refined_json_path):
+    logging.debug(f"Parsing raw json at {raw_json_path}")
     with open(raw_json_path, "r") as f_raw_json:
         raw_data = json.load(f_raw_json)
 
@@ -30,15 +33,13 @@ def parse_raw_json_refined(raw_json_path, output_refined_json_path):
         "categoriaId":              raw_data["vtxctx"][0]["categoryId"],
         "departamento":             raw_data["vtxctx"][0]["departmentName"].title(),
         "departamentoId":           raw_data["vtxctx"][0]["departmentyId"],
-        "produtoId":                str(raw_data["skuJson_0"][0]["productId"]),
+        "produtoId":                str(raw_data["skuJson_0"][0]["productId"]) if "n/a" not in raw_data["skuJson_0"][0] else "n/a",
         "imagens":                  raw_data["images"],
-        "familias":                 get_familias(raw_data),
-        "ano_inicial":              get_ano_inicial(raw_data),
-        "ano_final":                get_ano_final(raw_data),
         "modelo":                   get_modelo(),
         "fabricante":               get_fabricante(raw_data),
         "automaker":                get_fabricante(raw_data),
         "anotacoes":                get_anotacoes(raw_data),
+        "compatibilidades":         get_compatibilidades(raw_data),
     }
 
     with open(output_refined_json_path, "w") as f_refined_json:
@@ -53,12 +54,15 @@ def get_peso(raw_data):
     return peso_kg
 
 def get_descricao(raw_data):
-    nome_string = raw_data["skuJson_0"][0]["name"]
-    try:
-        nome = nome_string[:nome_string.index("|")].strip()
-    except ValueError:
-        nome = "n/a"
-    return nome
+    if "n/a" not in raw_data["skuJson_0"][0]:
+        nome_string = raw_data["skuJson_0"][0]["name"]
+        try:
+            nome = nome_string[:nome_string.index("|")].strip()
+        except ValueError:
+            nome = "n/a"
+        return nome
+    else:
+        return "n/a"
     
 def get_garantia(raw_data):
     garantia_string = raw_data["CARACTERISTICAS"][0]["GARANTIA"]
@@ -70,16 +74,27 @@ def get_garantia(raw_data):
     return garantia_dias
 
 def get_compatibilidades(raw_data):
+    compatibilidades = []
     description_string = raw_data["itemprop"]
     pattern = r'APLICAÇÃO: (.+) \| TIPO DE PRODUTO:'
     if (found := re.search(pattern, description_string)):
         familias_string = found.group(1)
         familias = [i.strip() for i in familias_string.split(",")]
-        compatibilidades = defaultdict(lambda: [])
         for familia in familias:
+            uma_compatibilidade = {}
+            try: 
+                if re.search("\d\d\d\d", familia):
+                    uma_compatibilidade["name"] = familia[:familia.rindex("-")].strip()
+                else:
+                    uma_compatibilidade["name"] = familia
+            except ValueError:
+                uma_compatibilidade["name"] = familia
+            uma_compatibilidade["ano_inicial"] = get_ano_inicial(familia)
+            uma_compatibilidade["ano_final"] = get_ano_final(familia)
             marca = familia.split(" ")[0]
-            compatibilidades[marca].append(familia)
-        compatibilidades = [compatibilidades]
+            uma_compatibilidade["fabricante"] = marca
+            uma_compatibilidade["automaker"] = marca
+            compatibilidades.append(uma_compatibilidade)
     else:
         compatibilidades = "n/a"
     return compatibilidades
@@ -95,45 +110,17 @@ def get_fabricante(raw_data):
         fabricante = "n/a"
     return fabricante
 
-def get_familias(raw_data):
-    description_string = raw_data["itemprop"]
-    pattern = r'APLICAÇÃO: (.+) \| TIPO DE PRODUTO:'
-    if (found := re.search(pattern, description_string)):
-        familias_string = found.group(1)
-        familias = [i.strip() for i in familias_string.split(",")]
-        for index, familia in enumerate(familias):
-            try:
-                if re.search("\d\d\d\d", familia):
-                    familias[index] = familia[:familia.rindex("-")].strip()
-            except ValueError:
-                continue
+def get_ano_inicial(familia):
+    if (found := re.search(r'(\d\d\d\d) \wm Diante', familia)):
+        return found.group(1)
     else:
-        familias = "n/a"
-    return familias 
+        return "n/a"
 
-def get_ano_inicial(raw_data):
-    description_string = raw_data["itemprop"]
-    pattern = r'APLICAÇÃO: (.+) \| TIPO DE PRODUTO:'
-    if (found := re.search(pattern, description_string)):
-        familias_string = found.group(1)
-        familias = [i.strip() for i in familias_string.split(",")]
-    anos = ["n/a" for _ in familias]
-    for index, familia in enumerate(familias):
-        if (found := re.search(r'(\d\d\d\d) Em Diante', familia)):
-            anos[index] = found.group(1)
-    return anos
-
-def get_ano_final(raw_data):
-    description_string = raw_data["itemprop"]
-    pattern = r'APLICAÇÃO: (.+) \| TIPO DE PRODUTO:'
-    if (found := re.search(pattern, description_string)):
-        familias_string = found.group(1)
-        familias = [i.strip() for i in familias_string.split(",")]
-    anos = ["n/a" for _ in familias]
-    for index, familia in enumerate(familias):
-        if (found := re.search(r'Até (\d\d\d\d)', familia)):
-            anos[index] = found.group(1)
-    return anos
+def get_ano_final(familia):
+    if (found := re.search(r'Até (\d\d\d\d)', familia)):
+        return found.group(1)
+    else:
+        return "n/a"
 
 def get_modelo():
     return "n/a"
@@ -157,7 +144,7 @@ def get_anotacoes(raw_data):
     return anotacoes
 
 def get_measures(raw_data) -> tuple[str, str, str]:
-    if raw_data["CARACTERISTICAS"][0]["DIMENSOES-DA-EMBALAGEM"] != "Consulte-nos!":
+    if raw_data["CARACTERISTICAS"][0]["DIMENSOES-DA-EMBALAGEM"] != "Consulte-nos!" and ("n/a" not in raw_data["skuJson_0"][0]):
         altura = str(raw_data["skuJson_0"][0]["skus"][0]["measures"]["height"])
         largura = str(raw_data["skuJson_0"][0]["skus"][0]["measures"]["width"])
         profundidade = str(raw_data["skuJson_0"][0]["skus"][0]["measures"]["length"])
