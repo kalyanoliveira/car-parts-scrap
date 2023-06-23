@@ -100,6 +100,11 @@ def htmls_exist():
             return True
     return False
 
+def not_404(html_file_path) -> bool:
+    if os.stat(html_file_path).st_size > 157861:
+        return True
+    return False
+
 def create_raw_jsons():
 
     if htmls_exist():
@@ -108,8 +113,9 @@ def create_raw_jsons():
 
         for html_file_name in os.listdir(htmls_folder):
             json_file_name = html_file_name.split(".")[0] + ".json"
-            parse_html_to_json(html_file_path=          os.path.join(htmls_folder, html_file_name),
-                               output_json_file_path=   os.path.join(raw_jsons_folder, json_file_name))
+            if not_404(os.path.join(htmls_folder, html_file_name)):
+                parse_html_to_json(html_file_path=          os.path.join(htmls_folder, html_file_name),
+                                   output_json_file_path=   os.path.join(raw_jsons_folder, json_file_name))
 
     # If we don't have any html files available, let us warn the developer
     else:
