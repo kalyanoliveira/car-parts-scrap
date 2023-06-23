@@ -15,6 +15,9 @@ parse_htmls:
 parse_raw_jsons:
 	cd ./src && python3 raw_json_parse.py $(PROJECT_PATH) $(website_name)
 
+parse_refined_jsons:
+	cd ./src && python3 refined_json_parse.py $(PROJECT_PATH) $(website_name)
+
 process_json:
 	echo For each website
 	echo For each raw JSON of that website
