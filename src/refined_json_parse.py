@@ -47,7 +47,7 @@ def add_json_fotos_csv(json_data):
         for index, image in enumerate(json_data['imagens']):
             remote_path = image[:image.index("?")]
 
-            image_name = json_data["mpn"] + f"_{index}"
+            image_name = json_data["mpn"] + f"_{index}" + ".jpg"
 
             Path(local_images_dir).mkdir(parents=True, exist_ok=True)
             local_path = os.path.join(local_images_dir, image_name)

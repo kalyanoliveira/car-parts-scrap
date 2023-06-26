@@ -18,7 +18,5 @@ parse_raw_jsons:
 parse_refined_jsons:
 	cd ./src && python3 refined_json_parse.py $(PROJECT_PATH) $(website_name)
 
-process_json:
-	echo For each website
-	echo For each raw JSON of that website
-	echo Process that raw JSON to create a refined JSON
+download_photos:
+	cd ./src && python3 photo_download.py $(proxy_credential) $(PROJECT_PATH) $(website_name)
