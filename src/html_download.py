@@ -47,7 +47,7 @@ def download_all_htmls():
     output_directory = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "htmls")
     Path(output_directory).mkdir(parents=True, exist_ok=True)
 
-    csv_file_path = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "csvs", "product_urls.csv")
+    csv_file_path = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "csvs", "urls", "product_urls.csv")
 
     iterations = 0
     with open(csv_file_path, "r") as file:

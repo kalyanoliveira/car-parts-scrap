@@ -14,8 +14,8 @@ $(PECAHOJE_XML_FILES) &:
 	@if [ -z "$$(ls -A ./data/$(WEBSITE_NAME)/xmls/*.xml 2>/dev/null)" ]; then \
 		echo "Downloading xml files from supplied sitemap url"; \
 		cd ./src/scrapy && scrapy crawl xml_download -s PROJECT_PATH=$(PROJECT_PATH) -s SITEMAP_URL="http://www.pecahoje.com.br/sitemap.xml" --nolog; \
-		rm ../../data/$(WEBSITE_NAME)/xmls/brand-1.xml; \
-		rm ../../data/$(WEBSITE_NAME)/xmls/category-1.xml; \
+		rm -f ../../data/$(WEBSITE_NAME)/xmls/brand-1.xml; \
+		rm -f ../../data/$(WEBSITE_NAME)/xmls/category-1.xml; \
 	else \
 		:; \
 	fi

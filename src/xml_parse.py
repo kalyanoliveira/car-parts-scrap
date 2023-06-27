@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import logging
 from bs4 import BeautifulSoup as bs
+import csv
 
 # Command line arguments
 PROJECT_PATH = sys.argv[1]
@@ -12,7 +13,7 @@ WEBSITE_NAME = sys.argv[2]
 xmls_folder = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "xmls")
 
 # Get the csvs folder
-csvs_folder = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "csvs")
+urls_folder = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "csvs", "urls")
 
 def add_xml_to_csv(xml_filepath, output_csv_filepath):
     logging.debug(f"Parsing xml file {xml_filepath}")
@@ -47,14 +48,14 @@ def create_product_urls_csv():
     if xmls_exist():
 
         # Clear the existing product_urls.csv
-        Path(csvs_folder).mkdir(parents=True, exist_ok=True)
-        with open(os.path.join(csvs_folder, "product_urls.csv"), "w"):
+        Path(urls_folder).mkdir(parents=True, exist_ok=True)
+        with open(os.path.join(urls_folder, "product_urls.csv"), "w"):
             pass 
 
         # Parse each xml file in xml_folder
         for xml_file_name in os.listdir(xmls_folder):
             add_xml_to_csv(xml_filepath=            os.path.join(xmls_folder, xml_file_name), 
-                           output_csv_filepath=     os.path.join(csvs_folder, "product_urls.csv"))
+                           output_csv_filepath=     os.path.join(urls_folder, "product_urls.csv"))
 
     # In case we have not xml files, let's log an error
     else:
