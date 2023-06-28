@@ -26,12 +26,8 @@ pecahoje_xmls: $(PECAHOJE_XML_FILES)
 pecahoje_urls: pecahoje_xmls
 	@echo 2
 	@# If the url csv file does not already exist, create it
-	@if [ -z "$$(ls -A ./data/$(WEBSITE_NAME)/csvs/urls/product_urls.csv 2>/dev/null)" ]; then \
-		echo "Creating urls csv from xml files"; \
-		python3 ./src/xml_parse.py $(PROJECT_PATH) $(WEBSITE_NAME); \
-	else \
-		:; \
-	fi
+	@echo "Creating urls csv from xml files"
+	@python3 ./src/xml_parse.py $(PROJECT_PATH) $(WEBSITE_NAME)
 
 pecahoje_htmls: pecahoje_urls
 	@echo 3
