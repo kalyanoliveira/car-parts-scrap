@@ -25,21 +25,16 @@ pecahoje_xmls: $(PECAHOJE_XML_FILES)
 
 pecahoje_urls: pecahoje_xmls
 	@echo 2
-	@# If the url csv file does not already exist, create it
 	@echo "Creating urls csv from xml files"
 	@python3 ./src/xml_parse.py $(PROJECT_PATH) $(WEBSITE_NAME)
 
 pecahoje_htmls: pecahoje_urls
 	@echo 3
-	@# If no html files already exist, download them
-	@if [ -z "$$(ls -A ./data/$(WEBSITE_NAME)/htmls/*.html 2>/dev/null)" ]; then \
-		echo "Downloading html files from urls csv"; \
-		NUM_OF_HTMLS_FILES="$$(cat ./data/$(WEBSITE_NAME)/csvs/product_urls.csv | wc -l)"; \
-		python3 ./src/html_download.py $(PROXY) $(PROJECT_PATH) $(WEBSITE_NAME) 15 5; \
-		$(MAKE) clean_pecahoje_raw_jsons ; \
-	else \
-		:; \
-	fi
+	@echo "Downloading html files from urls csv"
+	@NUM_OF_HTMLS_FILES=$$(cat ./data/$(WEBSITE_NAME)/csvs/urls/product_urls.csv | wc -l); \
+	python3 ./src/html_download.py $(PROXY) $(PROJECT_PATH) $(WEBSITE_NAME) 15 $${NUM_OF_HTMLS_FILES}
+	@# Remove this if you want to stop the recompiling all the time
+	@$(MAKE) clean_pecahoje_raw_jsons
 
 pecahoje_raw_jsons: pecahoje_htmls
 	@echo 4

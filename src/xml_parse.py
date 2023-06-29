@@ -34,7 +34,7 @@ def add_xml_to_csv(xml_filepath, output_csv_filepath, known_rows):
         lastmod = url_tag.find("lastmod").text
         filename = url.split("/")[-2]
 
-        new_row = [url, filename, lastmod, time.time()]
+        new_row = [url, filename + ".html", lastmod, time.time()]
         
         row_to_add = get_correct_row(new_row, known_rows)
 
@@ -48,12 +48,9 @@ def get_correct_row(new_row, known_rows):
             new_row_date = dt.strptime(new_row[2], "%Y-%m-%d")
             other_row_date = dt.strptime(other_row[2], "%Y-%m-%d")
             if new_row_date <= other_row_date:
-                print("repeated")
                 return known_rows[index]
             else:
-                print("changed")
                 return new_row
-    print("added")
     return new_row
 
 # Returns true if it can find any .xml file in xml_folder

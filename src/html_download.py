@@ -26,7 +26,7 @@ WEBSITE_NAME = sys.argv[3]
 # Assign maximum_simultaneous_requests to command line argument 4, but if that is empty, assign a default value of 15
 max_simultaneous_requests = int(sys.argv[4]) if len(sys.argv) > 4 else 15
 
-# Assign stop_at to command line argument 5, but if that is empty, assign a default value of 100
+# Assign stop_at to command line argument 5, but if that is empty, assign a default value of 20
 stop_at = int(sys.argv[5]) if len(sys.argv) > 5 else 20
 
 def request_html(html_address, html_download_output_path):
@@ -37,10 +37,10 @@ def request_html(html_address, html_download_output_path):
     else:
         # Downloading file
         logging.debug(f"Requisitando {html_address}")
-        # proxies = {"https": proxy_credential}
-        # response = requests.get(html_address, proxies=proxies, verify=False)
-        # with open(html_download_output_path, "wb") as f:
-        #     f.write(response.content)
+        proxies = {"https": proxy_credential}
+        response = requests.get(html_address, proxies=proxies, verify=False)
+        with open(html_download_output_path, "wb") as f:
+            f.write(response.content)
         logging.debug(f"{html_download_output_path} [OK]")
 
 def download_all_htmls():
@@ -55,15 +55,24 @@ def download_all_htmls():
         for row in csv_reader:
             if iterations >= stop_at:
                 break
-            url, desired_output_file_name = row
+            url, desired_output_file_name, timestamp = row[0], row[1], row[3]
 
             desired_output_file_path = os.path.join(output_directory, desired_output_file_name)
 
             while int(subprocess.run(["pgrep", "-c", "python3"], capture_output=True, text=True).stdout.strip()) >= max_simultaneous_requests:
                 time.sleep(0.1)
 
-            request_html(html_address=url,
-                         html_download_output_path=desired_output_file_path)
+            if os.path.exists(desired_output_file_path):
+                if os.path.getmtime(desired_output_file_path) < float(timestamp):
+                    request_html(html_address=url,
+                                html_download_output_path=desired_output_file_path)
+                else:
+                    print(f"not requesting {desired_output_file_name}")
+                    iterations += 1
+                    continue
+            else:
+                request_html(html_address=url,
+                            html_download_output_path=desired_output_file_path)
 
             iterations += 1
 
