@@ -1,23 +1,20 @@
+"""
+Given any downloaded html files, parses them to create raw JSON files which
+contain interesting data to us.
+
+Usage:
+$ python3 html_parse.py path/to/project/here website_name
+"""
+
 import json
 from bs4 import BeautifulSoup as bs
 import re
 from js2py import eval_js
-import logging
 import sys
 import os
 from pathlib import Path
 
-logging.getLogger().setLevel(logging.DEBUG)
-
-PROJECT_PATH = sys.argv[1]
-WEBSITE_NAME = sys.argv[2]
-
-htmls_folder = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "htmls")
-
-raw_jsons_folder = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "jsons", "raw")
-
 def get_images(bs_content):
-    # Get all of the images
     ul_element = bs_content.find("ul", {"class":"thumbs"})
     img_elements = bs_content.find_all("a", {"id":"botaoZoom"})
     images = []
@@ -47,13 +44,18 @@ def regex_to_json_dict(html_content: str, regex_pattern: str) -> dict:
     else:
         search_result = {"n/a": "n/a"}
     
-    # We could technically stop here, and already do a json.loads(search_result)
-    # The only reason we do all this below is to return a sorted dict, and also a dict inside a list
+    # We could technically stop here, and already do a json.loads(search_result).
+    # The only reason we do all this below is to return a sorted dict that is 
+    # also inside a list.
+    # I guess you could also argue for some JSON error checking with 
+    # the try-except.
+
     js_code = f"""
         var result = {search_result};
         JSON.stringify(result);
     """
     json_string = eval_js(js_code)
+
     if json_string:
         try:
             data = json.loads(json_string)
@@ -67,17 +69,36 @@ def regex_to_json_dict(html_content: str, regex_pattern: str) -> dict:
         return None
 
 def parse_html_to_json(html_file_path, output_json_file_path):
+    """
+    Creates the raw JSON version of an HTML file by parsing it, given the path
+    to a downloaded HTML file and a path to save the raw JSON.
 
-    logging.debug(f"Parsing html file {html_file_path}")
+    Args:
+        Path to the downloaded HTML file, path to save the generated raw JSON
 
+    Returns:
+        void
+    """
+
+    # Give the contents of the downloaded HTML file to bs4.
     with open(html_file_path, "r") as f_html:
         html_contents = f_html.read()
-
     bs_content = bs(html_contents, features="lxml")
+
+    """
+    I've taken a bit liberty in the following steps.
+    There's really not a right way of doing it, and I'm sure that I can still 
+    make improvements. 
+    However, this is such a boring process to document and structure that 
+    I'll just leave it like this.
+    At least everything is compartmentalized in functions, so that should make
+    it easier to follow through.
+    """
 
     skuJson_0_pattern = r'var skuJson_0 = ({.+});CATALOG'
     vtxctx_pattern = r'vtxctx = ({.+});</script'
     vtex_events_addData_pattern = r'<script>\nvtex.events.addData\(({.+})\);\n</script>'
+
     itemprop_pattern = r'<meta itemprop="description" content="(.+)" \/><meta itemprop="url" '
     itemprop = found.group(1) if (found := re.search(itemprop_pattern, html_contents)) else "n/a"
 
@@ -95,31 +116,76 @@ def parse_html_to_json(html_file_path, output_json_file_path):
         json.dump(data, f_json, indent=4, ensure_ascii=False)
 
 def htmls_exist():
+    """
+    Returns True if any HTML files exist, else False.
+
+    Args:
+        void
+
+    Returns:
+        bool
+    """
+
     for file_name in os.listdir(htmls_folder):
         if file_name.endswith(".html"):
             return True
     return False
 
 def not_404(html_file_path) -> bool:
+    """
+    Returns True if the HTML file located at the provided path is larger
+    than 157861 bytes, else False.
+
+    Args:
+        Path to a downloaded HTML file
+    
+    Returns:
+        bool
+    """
+
     if os.stat(html_file_path).st_size > 157861:
         return True
     return False
 
 def create_raw_jsons():
+    """
+    For every downloaded HTML file, if it did not 404, parse it using the
+    parse_html_to_json function to generate a raw JSON.
+    
+    Args:
+        void
+
+    Returns:
+        void
+    """
 
     if htmls_exist():
-        # Create a folder to dump all of the raw jsons, if it doens't exist already
+
+        # Create a folder to dump all of the raw jsons, if it doesn't exist already.
         Path(raw_jsons_folder).mkdir(parents=True, exist_ok=True)
 
+        # Loop through every downloaded HTML file. If it did not 404, parse it
+        # to generate a raw JSON file.
         for html_file_name in os.listdir(htmls_folder):
-            json_file_name = html_file_name.split(".")[0] + ".json"
+
             if not_404(os.path.join(htmls_folder, html_file_name)):
+                json_file_name = html_file_name.split(".")[0] + ".json"
                 parse_html_to_json(html_file_path=          os.path.join(htmls_folder, html_file_name),
                                    output_json_file_path=   os.path.join(raw_jsons_folder, json_file_name))
 
-    # If we don't have any html files available, let us warn the developer
+    # If we don't have any html files available, let us warn the developer.
     else:
-        logging.error(f"HTML files for {WEBSITE_NAME} do not exist, could not parse them")
+        # log an error
+        pass
 
 if __name__ == "__main__":
+    
+    # Command-line arguments.
+    PROJECT_PATH = sys.argv[1]
+    WEBSITE_NAME = sys.argv[2]
+
+    # Getting the path to important folders.
+    htmls_folder = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "htmls")
+    raw_jsons_folder = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "jsons", "raw")
+
     create_raw_jsons()

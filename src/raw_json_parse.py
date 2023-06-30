@@ -1,23 +1,44 @@
+"""
+Continues the processing of our data. Takes all of the raw JSONs, and converts
+them to refined ones, where the data of interest is more alike the format that
+we want.
+
+Usage:
+$ python3 raw_json_parse.py path/to/project/here website_name
+"""
+
 import os
 import json
 from pathlib import Path
-import logging
 import sys
 import re
 from collections import defaultdict
 
-PROJECT_PATH = sys.argv[1]
-WEBSITE_NAME = sys.argv[2]
-
-raw_jsons_dir = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "jsons", "raw")
-refined_jsons_dir = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "jsons", "refined")
-
-logging.getLogger().setLevel(logging.DEBUG)
-
 def parse_raw_json_refined(raw_json_path, output_refined_json_path):
-    logging.debug(f"Parsing raw json at {raw_json_path}")
+    """
+    Given the path to a raw JSON file, parses it and generates a refined JSON
+    file, which is saved to a specified path.
+
+    Args:
+        Path to the saved raw JSON, path to the place to save the generated
+        refined JSON
+    
+    Returns:
+        void
+    """
+
+    # Bring the raw JSON data here.
     with open(raw_json_path, "r") as f_raw_json:
         raw_data = json.load(f_raw_json)
+
+
+    """
+    Once again, this process is quite free. 
+    Worth noting is that you do have to be careful with situations in which 
+    data is missing from HTML webpages.
+    That is, the design of your error checking in the html_parse.py script and
+    in this script need to go hand in hand.
+    """
 
     data = {
         "mpn":                      raw_data["vtex.events.addData"][0]["productReferenceId"],
@@ -67,7 +88,7 @@ def get_descricao(raw_data):
 def get_garantia(raw_data):
     garantia_string = raw_data["CARACTERISTICAS"][0]["GARANTIA"]
     try:
-        # Now this is just evil
+        # now this is just evil
         garantia_dias = garantia_string[:garantia_string.index("–")].split(" ")[0].strip()
     except ValueError:
         garantia_dias = "n/a"
@@ -152,19 +173,49 @@ def get_measures(raw_data) -> tuple[str, str, str]:
     return ("n/a", "n/a", "n/a")
 
 def raw_jsons_exist():
+    """
+    Returns True if any raw JSON files exist, else False.
+
+    Args:
+        void
+
+    Returns:
+        void
+    """
+
     for file_name in os.listdir(raw_jsons_dir):
         if file_name.endswith(".json"):
             return True
     return False
 
 def create_refined_jsons():
+    """
+    For every raw JSON that we have, generate a new refined JSON by parsing them.
+
+    Args:
+        void
+
+    Returns:
+        void
+    """
+
     if raw_jsons_exist():
         Path(refined_jsons_dir).mkdir(parents=True, exist_ok=True)
         for raw_json_name in os.listdir(raw_jsons_dir):
             parse_raw_json_refined(raw_json_path=               os.path.join(raw_jsons_dir, raw_json_name),
                                    output_refined_json_path=    os.path.join(refined_jsons_dir, raw_json_name))
     else:
-        logging.error(f"Could not create refined jsons for {WEBSITE_NAME}, raw jsons do not exist")
+        # log an error
+        pass
 
 if __name__ == "__main__":
+
+    # Command-line arguments.
+    PROJECT_PATH = sys.argv[1]
+    WEBSITE_NAME = sys.argv[2]
+
+    # Getting the path to some important folders.
+    raw_jsons_dir = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "jsons", "raw")
+    refined_jsons_dir = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "jsons", "refined")
+
     create_refined_jsons()
