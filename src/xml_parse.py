@@ -25,7 +25,6 @@ import csv
 import time
 from datetime import datetime as dt
 
-
 def add_xml_to_csv(xml_filepath, output_csv_filepath, known_rows):
     """
     Given the path to an xml file, updates the product_urls.csv file with the
@@ -39,6 +38,8 @@ def add_xml_to_csv(xml_filepath, output_csv_filepath, known_rows):
     Returns:
         void
     """
+
+    logger.debug(f"Adding to product_urls.csv the URLs from {xml_filepath.split('/')[-1]}")
 
     # Get the contents of the .xml file.
     content = []
@@ -70,6 +71,8 @@ def add_xml_to_csv(xml_filepath, output_csv_filepath, known_rows):
         with open(output_csv_filepath, "a") as f_csv:
             writer = csv.writer(f_csv)
             writer.writerow(row_to_add)
+    
+    logger.info(f"Done parsing XML file {xml_filepath.split('/')[-1]}")
 
 def get_correct_row(new_row, known_rows):
     """
@@ -84,6 +87,8 @@ def get_correct_row(new_row, known_rows):
         The correct row (list) to be added
     """
 
+    logger.debug(f"Deciding what to do with new_row {new_row[1]}")
+
     # If the new row exists in our list of known rows and its lastmod is newer
     # than the corresponding lastmod of the existing row in our known rows, 
     # return the new row. 
@@ -95,9 +100,12 @@ def get_correct_row(new_row, known_rows):
             new_row_date = dt.strptime(new_row[2], "%Y-%m-%d")
             other_row_date = dt.strptime(other_row[2], "%Y-%m-%d")
             if new_row_date <= other_row_date:
+                logger.debug(f"new_row already exists, adding old row")
                 return known_rows[index]
             else:
+                logger.debug(f"new_row already exists, but has been modified. Adding {new_row[1]}")
                 return new_row
+    logger.debug(f"new_row does not exist, adding it")
     return new_row
 
 def xmls_exist():
@@ -128,6 +136,8 @@ def update_known_rows(csv_file_path, curr_known_rows):
     Returns:
         Updated list of previously/currently known rows
     """
+    
+    logger.debug("Updating list of known rows")
 
     # If a new product_urls.csv exists, save its contents.
     csv_file_rows = []
@@ -144,6 +154,7 @@ def update_known_rows(csv_file_path, curr_known_rows):
         if csv_file_row[0] in curr_known_urls:
             continue
         else:
+            logger.debug(f"Added to known rows {csv_file_row[1]}")
             new_curr_known_rows.append(csv_file_row)
 
     return new_curr_known_rows
@@ -159,11 +170,15 @@ def create_product_urls_csv():
         void
     """
     
+    logger.info(f"Starting XML parse of {WEBSITE_NAME}")
+
     if xmls_exist():
 
         urls_csv_file_path = os.path.join(urls_folder, "product_urls.csv")
 
         for index, xml_file_name in enumerate(os.listdir(xmls_folder)):
+
+            logger.info(f"Starting parse of {xml_file_name}")
 
             # If xml_file_name is the first file being parsed, we need to save
             # the contents of the current product_urls.csv (if it exists), and
@@ -175,6 +190,9 @@ def create_product_urls_csv():
                                                curr_known_rows= [])
 
                 # Wipe out product_urls.csv.
+
+                logger.debug("Wiping out current version of product_urls.csv")
+
                 Path(urls_folder).mkdir(parents=True, exist_ok=True)
                 with open(urls_csv_file_path, "w"): pass 
 
@@ -192,6 +210,7 @@ def create_product_urls_csv():
                            known_rows=              known_rows)
         
     else:
+        logger.error(f"Could not find any XML files")
         pass
         # print error
 
@@ -207,6 +226,11 @@ def create_product_urls_csv():
     #         print()
 
 if __name__ == "__main__":
+
+    import logging
+    import logging.config
+    logging.config.fileConfig('./src/logging.conf')
+    logger = logging.getLogger("xml_parse")
 
     # Command-line arguments.
     PROJECT_PATH = sys.argv[1]

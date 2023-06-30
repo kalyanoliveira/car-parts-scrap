@@ -82,3 +82,5 @@ class XMLSpider(scrapy.Spider):
         # Save the contents of the current <loc>.xml file.
         xml_file_path = os.path.join(xmls_dir, response.url.split("/")[-1])
         Path(xml_file_path).write_bytes(response.body)
+
+        print(f"Downloaded {xml_file_path}")

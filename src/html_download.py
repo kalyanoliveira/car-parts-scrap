@@ -13,11 +13,11 @@ import csv
 from pathlib import Path
 import requests
 import time
+import pickle
 
 def request_html(html_address, html_download_output_path):
     """
-    Given the URL to an HTML and a path to save it to, downloads that file (if
-    it does not already exist and is large enough (more than 157861 bytes)).
+    Given the URL to an HTML and a path to save it to, downloads that file 
 
     Args:
         URL to the HTML file to request, path to location to save download
@@ -26,17 +26,21 @@ def request_html(html_address, html_download_output_path):
         void
     """
 
-    # If the html file already exists and its size is large enough, do not download it.
-    if os.path.exists(html_download_output_path) and os.stat(html_download_output_path).st_size > 157861:
-        # log an error
-        pass
-    else:
-        # Create a request to the URL of the HTML file, and save the response
-        # contents to the correct path.
-        proxies = {"https": proxy_credential}
+    logger.info(f"Requesting {html_address}")
+
+    # Create a request to the URL of the HTML file, and save the response
+    # contents to the correct path.
+    proxies = {"https": proxy_credential}
+    if proxy:
         response = requests.get(html_address, proxies=proxies, verify=False)
-        with open(html_download_output_path, "wb") as f_html:
-            f_html.write(response.content)
+    else:
+        response = requests.get(html_address, verify=False)
+    with open(html_download_output_path, "wb") as f_html:
+        f_html.write(response.content)
+
+    logger.info(f"Saved to {html_download_output_path}")
+
+    requested_webpages.append(html_download_output_path.split("/")[-1])
 
 def download_all_htmls():
     """
@@ -49,6 +53,8 @@ def download_all_htmls():
     Returns:
         void
     """
+
+    logger.info(f"Starting HTML download of {WEBSITE_NAME}")
 
     # Create a directory to store all downloaded HTML files.
     output_directory = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "htmls")
@@ -76,6 +82,8 @@ def download_all_htmls():
             url, desired_output_file_name, timestamp = row[0], row[1], row[3]
             desired_output_file_path = os.path.join(output_directory, desired_output_file_name)
 
+            logger.debug(f"Currently looking at product_urls.csv line of {desired_output_file_name}")
+
             # If we are trying to download more than 15 HTML files at once, wait
             # until one of them is done.
             while int(subprocess.run(["pgrep", "-c", "python3"], capture_output=True, text=True).stdout.strip()) >= max_simultaneous_requests:
@@ -87,12 +95,15 @@ def download_all_htmls():
             # This allows us to know if we need to re-download the HTML file.
             if os.path.exists(desired_output_file_path):
                 if os.path.getmtime(desired_output_file_path) < float(timestamp):
+                    logger.debug("File already exists and is older than timestamp in product_urls.csv")
                     request_html(html_address=              url, 
                                  html_download_output_path= desired_output_file_path)
                 else:
+                    logger.debug("File already exists and is newer than timestamp in product_urls.csv")
                     iterations += 1
                     continue
             else:
+                logger.debug("File does not exist")
                 request_html(html_address=              url, 
                              html_download_output_path= desired_output_file_path)
 
@@ -100,6 +111,14 @@ def download_all_htmls():
 
 if __name__ == "__main__":
 
+    import logging
+    import logging.config
+    logging.config.fileConfig('./src/logging.conf')
+    logger = logging.getLogger("html_download")
+    
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    
     # Command-line arguments.
     if len(sys.argv) < 4:
         # log an error, improper usage
@@ -117,4 +136,16 @@ if __name__ == "__main__":
     # a default value of 20.
     stop_at = int(sys.argv[5]) if len(sys.argv) > 5 else 20
 
+    proxy = False
+
+    if not proxy:
+        logger.warning("Not using a proxy")
+
+    requested_webpages = []
+
     download_all_htmls()
+
+    pickles_dir = os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "pickles")
+    Path(pickles_dir).mkdir(parents=True, exist_ok=True)
+    with open(os.path.join(pickles_dir, "requested.pkl"), "wb") as f_pickle:
+        pickle.dump(requested_webpages, f_pickle)

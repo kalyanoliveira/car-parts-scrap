@@ -23,6 +23,7 @@ $(PECAHOJE_XML_FILES) &:
 	
 pecahoje_xmls: $(PECAHOJE_XML_FILES)
 	@echo 1
+	@echo "Found xml files"
 
 pecahoje_urls: pecahoje_xmls
 	@echo 2
@@ -33,20 +34,13 @@ pecahoje_htmls: pecahoje_urls
 	@echo 3
 	@echo "Downloading html files from urls csv"
 	@NUM_OF_HTMLS_FILES=$$(cat ./data/pecahoje/csvs/urls/product_urls.csv | wc -l); \
-	python3 ./src/html_download.py $(PROXY) $(PROJECT_PATH) pecahoje 15 $${NUM_OF_HTMLS_FILES}
-	@# Remove this if you want to stop the recompiling all the time
-	@$(MAKE) clean_pecahoje_raw_jsons
+	python3 ./src/html_download.py $(PROXY) $(PROJECT_PATH) pecahoje 15 20
 
 pecahoje_raw_jsons: pecahoje_htmls
 	@echo 4
-	@# If no raw jsons already exist, create them
-	@if [ -z "$$(ls -A ./data/pecahoje/jsons/raw/*.json 2>/dev/null)" ]; then \
-		echo "Creating raw jsons from html files"; \
-		python3 ./src/html_parse.py $(PROJECT_PATH) pecahoje; \
-		$(MAKE) clean_pecahoje_refined_jsons ; \
-	else \
-		:; \
-	fi
+	@echo "Creating raw jsons from html files"
+	@python3 ./src/html_parse.py $(PROJECT_PATH) pecahoje
+	@$(MAKE) clean_pecahoje_refined_jsons
 
 pecahoje_refined_jsons: pecahoje_raw_jsons
 	@echo 5
@@ -82,6 +76,6 @@ clean_pecahoje_refined_jsons: clean_pecahoje_csvs
 	@echo "Cleaning refined jsons"
 	@rm -f ./data/pecahoje/jsons/refined/*.json
 
-clean_pecahoje_raw_jsons: clean_pecahoje_refined_jsons
-	@echo "Cleaning raw jsons"
-	@rm -f data/pecahoje/jsons/raw/*.json
+clean_pecahoje_xmls:
+	@echo "Cleaning xmls"
+	@rm -f data/pecahoje/xmls/*.xml

@@ -13,6 +13,7 @@ from js2py import eval_js
 import sys
 import os
 from pathlib import Path
+import pickle
 
 def get_images(bs_content):
     ul_element = bs_content.find("ul", {"class":"thumbs"})
@@ -164,11 +165,15 @@ def create_raw_jsons():
         # Create a folder to dump all of the raw jsons, if it doesn't exist already.
         Path(raw_jsons_folder).mkdir(parents=True, exist_ok=True)
 
-        # Loop through every downloaded HTML file. If it did not 404, parse it
-        # to generate a raw JSON file.
+        # Get the list of HTML files that have changed
+        with open(os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "pickles", "requested.pkl"), "rb") as f_pkl:
+            changed = pickle.load(f_pkl)
+
+        # Loop through every downloaded HTML file. If it did not 404 and 
+        # it changed, parse it to generate a raw JSON file.
         for html_file_name in os.listdir(htmls_folder):
 
-            if not_404(os.path.join(htmls_folder, html_file_name)):
+            if not_404(os.path.join(htmls_folder, html_file_name)) and html_file_name in changed:
                 json_file_name = html_file_name.split(".")[0] + ".json"
                 parse_html_to_json(html_file_path=          os.path.join(htmls_folder, html_file_name),
                                    output_json_file_path=   os.path.join(raw_jsons_folder, json_file_name))
