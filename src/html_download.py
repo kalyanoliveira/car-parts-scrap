@@ -75,6 +75,7 @@ def download_all_htmls():
             # We add a hard stop to the download process here, just in case we 
             # want to debug stuff.
             if iterations >= stop_at:
+                logger.info(f"Reached maximum number of allowed HTML downloads ({stop_at})")
                 break
             
             # Each line in product_urls.csv has a URL, a FILENAME, a LASTMOD, 
@@ -108,6 +109,8 @@ def download_all_htmls():
                              html_download_output_path= desired_output_file_path)
 
             iterations += 1
+    
+    logger.info(f"Done downloading HTMLs of {WEBSITE_NAME}")
 
 if __name__ == "__main__":
 

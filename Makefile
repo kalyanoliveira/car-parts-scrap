@@ -4,7 +4,7 @@ PROXY = socks5h://localhost:9050
 download_photos:
 	cd ./src && python3 photo_download.py $(proxy_credential) $(PROJECT_PATH) $(website_name)
 
-.PHONY: pecahoje_xmls pecahoje_urls pecahoje_htmls pecahoje_raw_jsons pecahoje_refined_jsons pecahoje_csvs pecahoje
+.PHONY: pecahoje_xmls pecahoje_urls pecahoje_htmls pecahoje_raw_jsons pecahoje_refined_jsons pecahoje_csvs pecahoje clean_logs clean_pecahoje_csvs clean_pecahoje_refined_jsons clean_pecahoje_xmls
 
 a := ./data/pecahoje/xmls/product-
 PECAHOJE_XML_FILES := $a1.xml $a2.xml $a3.xml $a4.xml $a5.xml $a6.xml $a7.xml
@@ -22,6 +22,7 @@ $(PECAHOJE_XML_FILES) &:
 	fi
 	
 pecahoje_xmls: $(PECAHOJE_XML_FILES)
+	@$(MAKE) clean_logs
 	@echo 1
 	@echo "Found xml files"
 
@@ -65,6 +66,7 @@ pecahoje_csvs: pecahoje_refined_jsons
 
 pecahoje: pecahoje_csvs
 	@echo 7
+	@echo Success!
 
 clean_pecahoje_csvs:
 	@echo "Cleaning csvs"
@@ -79,3 +81,7 @@ clean_pecahoje_refined_jsons: clean_pecahoje_csvs
 clean_pecahoje_xmls:
 	@echo "Cleaning xmls"
 	@rm -f data/pecahoje/xmls/*.xml
+
+clean_logs:
+	@echo "Cleaning logs"
+	@rm -f ./logs/*.log

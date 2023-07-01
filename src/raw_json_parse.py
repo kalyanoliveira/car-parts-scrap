@@ -27,6 +27,8 @@ def parse_raw_json_refined(raw_json_path, output_refined_json_path):
         void
     """
 
+    logger.info(f"Parsing raw JSON file {raw_json_path.split('/')[-1]}")
+
     # Bring the raw JSON data here.
     with open(raw_json_path, "r") as f_raw_json:
         raw_data = json.load(f_raw_json)
@@ -65,6 +67,8 @@ def parse_raw_json_refined(raw_json_path, output_refined_json_path):
 
     with open(output_refined_json_path, "w") as f_refined_json:
         json.dump(data, f_refined_json, indent=4, ensure_ascii=False)
+
+    logger.info(f"Done parsing raw JSON file {raw_json_path.split('/')[-1]}")
 
 def get_peso(raw_data):
     peso_string = raw_data["CARACTERISTICAS"][0]["PESO-APROXIMADO"]
@@ -198,6 +202,8 @@ def create_refined_jsons():
     Returns:
         void
     """
+    
+    logger.info(f"Starting raw JSON parse of {WEBSITE_NAME}")
 
     if raw_jsons_exist():
         Path(refined_jsons_dir).mkdir(parents=True, exist_ok=True)
@@ -205,10 +211,17 @@ def create_refined_jsons():
             parse_raw_json_refined(raw_json_path=               os.path.join(raw_jsons_dir, raw_json_name),
                                    output_refined_json_path=    os.path.join(refined_jsons_dir, raw_json_name))
     else:
-        # log an error
-        pass
+        logger.error(f"Could not find any raw JSON files")
+        return
+
+    logger.info(f"Done parsing raw JSONs of {WEBSITE_NAME}")
 
 if __name__ == "__main__":
+
+    import logging
+    import logging.config
+    logging.config.fileConfig("./src/logging.conf")
+    logger = logging.getLogger("raw_json_parse")
 
     # Command-line arguments.
     PROJECT_PATH = sys.argv[1]

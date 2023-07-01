@@ -1,0 +1,27 @@
+file name: acabamento-inf-do-banco-tras-direito--lifan-530-0785.html
+
+7 name                                                                                      x
+8 name                                                                                      x
+24 name, store info                                                                         x
+25 skus, id, department, category, store info 							                    ***DONE
+55 name. id, skus, department, url, store info							                    ***DONE 
+71 skuJson_0 (name, id, skus, measures, image, compatibility, )					            ***DONE 
+94 name, compatibility, type???, extra information, color, url, images				        ***DONE 
+167 types, departments										                                x
+199 main images											                                    x
+202 - 208 images, thumbs class 									                            ***DONE
+212 image, name, mpn, id???, skus???                                                        x
+236 aplicacoes                                                                              x
+
+258 CARACTERISTICAS, TIPO DE PRODUTO, QUANTIDADE POR EMBALAGEM,  COR, PESO, DIMENSOES       ***
+EMBALGEM/PRODUTO, GARANTIA, APLICACAO, ESPECICACOES TECNICAS, INDICACOES, 
+CONTRA INDICACOES                                                                           
+
+285-899 recommendations                                                                     x
+
+important note: line 212 might have kit ids
+236 has a header about "fotos tecnicas". you might be able to use to add a bool like this:
+{
+"hastechimages": "true"
+}
+also 285-899 recommendations would be extra information

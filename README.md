@@ -14,9 +14,7 @@ The goal of this project is automate the scrapping of auto parts' information.<b
 
 # Usage
 
-`echo "" > log.txt && make pecahoje > log.txt`
-
-Or, of course, you can run just run `$ make pecahoje`, but I prefer keeping all of the output in a log file.
+`make pecahoje`
 
 You will need to setup a proxy, eventually. Then just add it the Makefile variable.
 Or just remove the proxy from the request command in the html_download.py file.

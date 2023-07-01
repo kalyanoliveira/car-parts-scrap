@@ -211,19 +211,9 @@ def create_product_urls_csv():
         
     else:
         logger.error(f"Could not find any XML files")
-        pass
-        # print error
+        return
 
-    # current_rows  = []
-    # with open(urls_csv_file_path, "r") as f_csv:
-    #     reader = csv.reader(f_csv)
-    #     current_rows.extend(reader)
-    # for known_row, curr_row in zip(known_rows, current_rows):
-    #     if known_row[3] != curr_row[3]:
-    #         print("diff between")
-    #         print(known_row)
-    #         print(curr_row)
-    #         print()
+    logger.info(f"Done parsing XMLs of {WEBSITE_NAME}")
 
 if __name__ == "__main__":
 

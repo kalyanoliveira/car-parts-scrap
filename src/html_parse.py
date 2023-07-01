@@ -81,6 +81,8 @@ def parse_html_to_json(html_file_path, output_json_file_path):
         void
     """
 
+    logger.info(f"Parsing HTML file {html_file_path.split('/')[-1]}")
+
     # Give the contents of the downloaded HTML file to bs4.
     with open(html_file_path, "r") as f_html:
         html_contents = f_html.read()
@@ -116,6 +118,8 @@ def parse_html_to_json(html_file_path, output_json_file_path):
     with open(output_json_file_path, "w") as f_json:
         json.dump(data, f_json, indent=4, ensure_ascii=False)
 
+    logger.info(f"Done parsing HTML file {html_file_path.split('/')[-1]}")
+
 def htmls_exist():
     """
     Returns True if any HTML files exist, else False.
@@ -150,8 +154,8 @@ def not_404(html_file_path) -> bool:
 
 def create_raw_jsons():
     """
-    For every downloaded HTML file, if it did not 404, parse it using the
-    parse_html_to_json function to generate a raw JSON.
+    For every downloaded HTML file, if it did not 404 and it changed, parse it 
+    using the parse_html_to_json function to generate a raw JSON.
     
     Args:
         void
@@ -159,6 +163,8 @@ def create_raw_jsons():
     Returns:
         void
     """
+
+    logger.info(f"Starting HTML parse of {WEBSITE_NAME}")
 
     if htmls_exist():
 
@@ -168,22 +174,40 @@ def create_raw_jsons():
         # Get the list of HTML files that have changed
         with open(os.path.join(PROJECT_PATH, "data", WEBSITE_NAME, "pickles", "requested.pkl"), "rb") as f_pkl:
             changed = pickle.load(f_pkl)
+            logger.info(f"Total of {len(changed)} HTML file(s) have changed since last download")
 
         # Loop through every downloaded HTML file. If it did not 404 and 
         # it changed, parse it to generate a raw JSON file.
         for html_file_name in os.listdir(htmls_folder):
 
-            if not_404(os.path.join(htmls_folder, html_file_name)) and html_file_name in changed:
-                json_file_name = html_file_name.split(".")[0] + ".json"
-                parse_html_to_json(html_file_path=          os.path.join(htmls_folder, html_file_name),
-                                   output_json_file_path=   os.path.join(raw_jsons_folder, json_file_name))
+            logger.debug(f"Deciding what to do with HTML file {html_file_name}")
+
+            if not_404(os.path.join(htmls_folder, html_file_name)):
+
+                if html_file_name in changed:
+                    json_file_name = html_file_name.split(".")[0] + ".json"
+                    parse_html_to_json(html_file_path=          os.path.join(htmls_folder, html_file_name), 
+                                       output_json_file_path=   os.path.join(raw_jsons_folder, json_file_name))
+                else:
+                    logger.debug(f"Did not change since last download")
+
+            else:
+                logger.debug(f"404'd {os.path.join(htmls_folder, html_file_name)}")
+
 
     # If we don't have any html files available, let us warn the developer.
     else:
-        # log an error
-        pass
+        logger.error(f"Could not find any HTML files")
+        return
+
+    logger.info(f"Done parsing HTMLs of {WEBSITE_NAME}")
 
 if __name__ == "__main__":
+
+    import logging
+    import logging.config
+    logging.config.fileConfig("./src/logging.conf")
+    logger = logging.getLogger("html_parse")
     
     # Command-line arguments.
     PROJECT_PATH = sys.argv[1]

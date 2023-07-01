@@ -41,6 +41,8 @@ def parse_refined_json(refined_json_path):
         void
     """
 
+    logger.info(f"Parsing refined json file {refined_json_path.split('/')[-1]}")
+
     # Get a dict with the data of the supplied refined json.
     with open(refined_json_path, "r") as f_refined_json:
         refined_json_data = json.load(f_refined_json)
@@ -50,7 +52,11 @@ def parse_refined_json(refined_json_path):
     add_json_fotos_csv(refined_json_data)
     add_json_compatibilidade_csv(refined_json_data)
 
+    logger.info(f"Done parsing refined JSON file {refined_json_path.split('/')[-1]}")
+
 def add_json_info_csv(json_data): 
+
+    logger.debug("Adding to info.csv")
 
     row = [json_data['mpn'], json_data['fabricante'], json_data['nome'], 
            json_data['altura'], json_data['largura'], json_data['profundidade'], 
@@ -67,7 +73,11 @@ def add_json_info_csv(json_data):
 
         info_csv_writer.writerow(row)
 
+    logger.debug("Done adding to info.csv")
+
 def add_json_fotos_csv(json_data):
+
+    logger.debug("Adding to fotos.csv")
 
     fotos_csv_file_path = os.path.join(csvs_dir, "fotos.csv")
     with open(fotos_csv_file_path, "a") as f_fotos_csv:
@@ -89,7 +99,11 @@ def add_json_fotos_csv(json_data):
 
             fotos_csv_writer.writerow(row)
 
+    logger.debug("Done adding to fotos.csv")
+
 def add_json_compatibilidade_csv(json_data):
+
+    logger.debug("Adding to compatibilidade.csv")
 
     compatibilidade_csv_file_path = os.path.join(csvs_dir, "compatibilidade.csv")
     with open(compatibilidade_csv_file_path, "a") as f_compatibilidade_csv:
@@ -109,6 +123,8 @@ def add_json_compatibilidade_csv(json_data):
                 row = remove_n_a_from_row(row)
 
                 compatibilidade_csv_writer.writerow(row)
+
+    logger.debug("Done adding to compatibilidade.csv")
 
 
 def refined_jsons_exist():
@@ -139,6 +155,8 @@ def create_csv_headers():
         void
     """
 
+    logger.debug("Creating csv files and headers")
+
     # info.csv.
     info_csv_header = ['mpn', 'fabricante', 'nome', 'altura', 'largura', 'profundidade', 'peso', 'descricao', 'partnumber', 'categoria', 'garantia', 'anotacoes', 'id']
     info_csv_file_path = os.path.join(csvs_dir, "info.csv")
@@ -146,12 +164,16 @@ def create_csv_headers():
         info_csv_writer = csv.writer(f_info_csv)
         info_csv_writer.writerow(info_csv_header)
 
+    logger.debug("Created info.csv and corresponding header")
+
     # fotos.csv.
     fotos_csv_header = ['remote', 'local']
     fotos_csv_file_path = os.path.join(csvs_dir, "fotos.csv")
     with open(fotos_csv_file_path, "w") as f_fotos_csv:
         fotos_csv_writer = csv.writer(f_fotos_csv)
         fotos_csv_writer.writerow(fotos_csv_header)
+        
+    logger.debug("Created fotos.csv and corresponding header")
 
     # compatibilidade.csv.
     compatibilidade_csv_header = ['partnumber', 'fabricante', 'automaker', 'ano_inicial', 'modelo', 'familia']
@@ -159,6 +181,10 @@ def create_csv_headers():
     with open(compatibilidade_csv_file_path, "w") as f_compatibilidade_csv:
         compatibilidade_csv_writer = csv.writer(f_compatibilidade_csv)
         compatibilidade_csv_writer.writerow(compatibilidade_csv_header)
+
+    logger.debug("Created compatibilidade.csv and corresponding header")
+
+    logger.debug("Done creating csv files and headers")
 
 def create_csvs():
     """
@@ -171,6 +197,8 @@ def create_csvs():
         void
     """
 
+    logger.info(f"Starting refined JSON parse of {WEBSITE_NAME}")
+
     if refined_jsons_exist():
 
         # Open the csv file and create their headers.
@@ -181,10 +209,17 @@ def create_csvs():
             refined_json_file_path = os.path.join(refined_jsons_dir, refined_json_file_name)
             parse_refined_json(refined_json_path= refined_json_file_path)
     else:
-        # log and error
-        pass
+        logger.error(f"Could not find any refined JSON files")
+        return
+
+    logger.info(f"Done parsing refined JSONs of {WEBSITE_NAME}")
 
 if __name__ == "__main__":
+
+    import logging
+    import logging.config
+    logging.config.fileConfig("./src/logging.conf")
+    logger = logging.getLogger("refined_json_parse")
     
     # Command-line arguments.
     PROJECT_PATH = sys.argv[1]
