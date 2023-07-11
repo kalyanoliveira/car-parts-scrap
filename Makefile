@@ -35,7 +35,8 @@ pecahoje_htmls: pecahoje_urls
 	@echo 3
 	@echo "Downloading html files from urls csv"
 	@NUM_OF_HTMLS_FILES=$$(cat ./data/pecahoje/csvs/urls/product_urls.csv | wc -l); \
-	python3 ./src/html_download.py $(PROXY) $(PROJECT_PATH) pecahoje 15 20
+	@# python3 ./src/html_download.py $(PROXY) $(PROJECT_PATH) pecahoje 15 $${NUM_OF_HTMLS_FILES}
+	@# python3 ./src/html_download.py "" $(PROJECT_PATH) pecahoje 15
 
 pecahoje_raw_jsons: pecahoje_htmls
 	@echo 4

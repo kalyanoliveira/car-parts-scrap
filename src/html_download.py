@@ -124,22 +124,29 @@ if __name__ == "__main__":
     
     # Command-line arguments.
     if len(sys.argv) < 4:
-        # log an error, improper usage
-        sys.exit(1)
-    # Assign proxy_credential to command line argument 1.
-    proxy_credential = sys.argv[1]
-    # Assign PROJECT_PATH to command line argument 3.
-    PROJECT_PATH = sys.argv[2]
-    # Assign WEBSITE_NAME to command line argument 2.
-    WEBSITE_NAME = sys.argv[3]
-    # Assign maximum_simultaneous_requests to command line argument 4, but if 
-    # that is empty, assign a default value of 15.
-    max_simultaneous_requests = int(sys.argv[4]) if len(sys.argv) > 4 else 15
-    # Assign stop_at to command line argument 5, but if that is empty, assign 
-    # a default value of 20.
-    stop_at = int(sys.argv[5]) if len(sys.argv) > 5 else 20
+        # Assign PROJECT_PATH to command line argument 1.
+        PROJECT_PATH = sys.argv[1]
 
-    proxy = False
+        # Assign WEBSITE_NAME to command line argument 2.
+        WEBSITE_NAME = sys.argv[2]
+    else:
+        # Assign proxy_credential to command line argument 1.
+        proxy_credential = sys.argv[1]
+        # Assign PROJECT_PATH to command line argument 2.
+        PROJECT_PATH = sys.argv[2]
+        # Assign WEBSITE_NAME to command line argument 3.
+        WEBSITE_NAME = sys.argv[3]
+        # Assign maximum_simultaneous_requests to command line argument 4, but if 
+        # that is empty, assign a default value of 15.
+        max_simultaneous_requests = int(sys.argv[4]) if len(sys.argv) > 4 else 15
+        # Assign stop_at to command line argument 5, but if that is empty, assign 
+        # a default value of 20.
+        stop_at = int(sys.argv[5]) if len(sys.argv) > 5 else 20
+
+    if proxy_credential:
+        proxy = True
+    else:
+        proxy = False
 
     if not proxy:
         logger.warning("Not using a proxy")
